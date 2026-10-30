@@ -1,0 +1,935 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Twitch Plus Goal Overlay</title>
+
+<style>
+:root {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  background: transparent;
+  overflow: hidden;
+}
+
+body {
+  --g1: #f0f0f5;
+  --g2: #9a9aa5;
+  --glow: rgba(255,255,255,.22);
+  --panel: rgba(10,12,22,.88);
+
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  color: #f7f7fb;
+
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 12px;
+}
+
+body[data-theme="grape"] {
+  --g1: #7b46ff;
+  --g2: #ff5ec4;
+  --glow: rgba(199,77,255,.45);
+}
+
+body[data-theme="mint"] {
+  --g1: #45e6cf;
+  --g2: #5ecbff;
+  --glow: rgba(69,230,207,.45);
+}
+
+body[data-theme="gold"] {
+  --g1: #ffd166;
+  --g2: #ff9e2c;
+  --glow: rgba(255,158,44,.5);
+}
+
+body[data-theme="ocean"] {
+  --g1: #38bdf8;
+  --g2: #2563eb;
+  --glow: rgba(56,189,248,.45);
+}
+
+body[data-theme="sunset"] {
+  --g1: #ff7e5f;
+  --g2: #feb47b;
+  --glow: rgba(255,126,95,.45);
+}
+
+body[data-theme="rose"] {
+  --g1: #fb7185;
+  --g2: #e879f9;
+  --glow: rgba(251,113,133,.45);
+}
+
+body[data-theme="neon"] {
+  --g1: #39ff14;
+  --g2: #00e5ff;
+  --glow: rgba(57,255,20,.45);
+}
+
+body[data-stage="1"] {
+  background:
+    radial-gradient(
+      ellipse at 50% 100%,
+      #30364d 0%,
+      #151927 45%,
+      #090b12 100%
+    );
+}
+
+#root {
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.block {
+  display: none;
+  width: min(var(--w, 640px), 100%);
+  color: #f7f7fb;
+}
+
+body[data-style="text"] #text,
+body[data-style="compact"] #compact,
+body[data-style="full"] #full,
+body[data-style="ticker"] #ticker,
+body[data-style="hero"] #hero,
+body[data-style="ring"] #ring,
+body[data-style="banner"] #banner,
+body[data-style="pill"] #pill {
+  display: block;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 18px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 0 28px var(--glow);
+  padding: 18px 22px;
+}
+
+.gradient {
+  background-image: linear-gradient(110deg,var(--g1),var(--g2));
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: var(--g1);
+  -webkit-text-fill-color: transparent;
+}
+
+.muted {
+  color: rgba(240,242,255,.68);
+  -webkit-text-fill-color: rgba(240,242,255,.68);
+}
+
+.topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.title {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.level {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .08em;
+  border-radius: 999px;
+  padding: 6px 10px;
+  color: #080912;
+  background: linear-gradient(110deg,var(--g1),var(--g2));
+  white-space: nowrap;
+  -webkit-text-fill-color: #080912;
+}
+
+.value {
+  font-size: 28px;
+  font-weight: 850;
+  letter-spacing: -.04em;
+  white-space: nowrap;
+}
+
+.track {
+  height: 10px;
+  background: rgba(255,255,255,.09);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 12px;
+}
+
+.fill {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg,var(--g1),var(--g2));
+  border-radius: inherit;
+  box-shadow: 0 0 14px var(--glow);
+  transition: width .4s ease;
+}
+
+.subline {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 10px;
+  font-size: 12px;
+}
+
+/* TEXT */
+
+#text {
+  width: auto;
+  max-width: 100%;
+}
+
+.textbox {
+  background: rgba(8,10,18,.92);
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 13px;
+  padding: 14px 22px;
+  box-shadow: 0 0 28px var(--glow);
+  font-weight: 850;
+  font-size: 25px;
+  letter-spacing: -.02em;
+  white-space: nowrap;
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+}
+
+.textbox .text-accent {
+  color: var(--g1);
+  -webkit-text-fill-color: var(--g1);
+}
+
+/* COMPACT */
+
+#compact {
+  --w: 400px;
+}
+
+#compact .panel {
+  padding: 16px 18px;
+}
+
+#compact .value {
+  font-size: 25px;
+}
+
+/* FULL */
+
+#full {
+  --w: 640px;
+}
+
+#full .panel {
+  padding: 22px 26px;
+}
+
+#full .track {
+  height: 26px;
+  position: relative;
+}
+
+#full .fill {
+  height: 100%;
+}
+
+#full .barlabel {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+  text-shadow: 0 1px 4px #000;
+}
+
+/* TICKER */
+
+#ticker {
+  width: auto;
+  max-width: 100%;
+  font-size: 27px;
+  font-weight: 900;
+  letter-spacing: .02em;
+  white-space: nowrap;
+  text-shadow: 0 2px 12px var(--glow),0 2px 4px #000;
+}
+
+#ticker .accent {
+  color: var(--g2);
+  -webkit-text-fill-color: var(--g2);
+}
+
+/* HERO */
+
+#hero {
+  --w: 640px;
+  text-align: center;
+}
+
+#hero .panel {
+  padding: 24px 30px;
+}
+
+#hero .hero-label {
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: .17em;
+}
+
+#hero .hero-number {
+  font-size: 76px;
+  line-height: 1.05;
+  font-weight: 950;
+  letter-spacing: -.07em;
+  margin-top: 8px;
+}
+
+#hero .denom {
+  font-size: 24px;
+  font-weight: 700;
+  margin-left: 8px;
+}
+
+#hero .hero-meta {
+  margin-top: 8px;
+  font-size: 14px;
+}
+
+/* RING */
+
+#ring {
+  --w: 640px;
+  text-align: center;
+}
+
+#ring .panel {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 20px 28px;
+}
+
+.ring-label {
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: .14em;
+}
+
+.ring-wrap {
+  width: 140px;
+  height: 140px;
+  position: relative;
+}
+
+.ring-wrap svg {
+  width: 140px;
+  height: 140px;
+  transform: rotate(-90deg);
+}
+
+.ring-track {
+  fill: none;
+  stroke: rgba(255,255,255,.12);
+  stroke-width: 9;
+}
+
+.ring-fill {
+  fill: none;
+  stroke: url(#ringGradient);
+  stroke-width: 9;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 6px var(--glow));
+  transition: stroke-dashoffset .5s ease;
+}
+
+.ring-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  font-weight: 900;
+}
+
+.ring-value {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+/* BANNER */
+
+#banner {
+  --w: 800px;
+}
+
+#banner .panel {
+  padding: 16px 22px 13px;
+  border-radius: 14px;
+}
+
+.banner-row {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr 1fr;
+  align-items: center;
+  gap: 12px;
+}
+
+.banner-left {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.banner-month {
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.banner-title {
+  text-align: center;
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: .12em;
+}
+
+.banner-value {
+  text-align: right;
+  font-size: 22px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.banner-track {
+  height: 8px;
+  background: rgba(255,255,255,.08);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-top: 12px;
+}
+
+/* PILL */
+
+#pill {
+  width: auto;
+  max-width: 100%;
+}
+
+.pillbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 999px;
+  padding: 12px 18px;
+  background: rgba(10,12,22,.92);
+  border: 1px solid rgba(255,255,255,.14);
+  box-shadow: 0 0 24px var(--glow);
+  font-size: 15px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.pill-level {
+  color: #090a12;
+  -webkit-text-fill-color: #090a12;
+  background: linear-gradient(110deg,var(--g1),var(--g2));
+  border-radius: 999px;
+  padding: 5px 8px;
+  font-size: 11px;
+}
+
+/* STATUS */
+
+#status {
+  display: none;
+  background: rgba(8,10,18,.94);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 14px;
+  color: #f4f4fa;
+  -webkit-text-fill-color: #f4f4fa;
+  box-shadow: 0 0 20px var(--glow);
+}
+
+body[data-state="empty"] #status {
+  display: block;
+}
+
+body[data-hide-empty="1"][data-state="empty"] #root {
+  display: none;
+}
+
+@media(max-width:450px) {
+  .textbox {
+    font-size: 18px;
+    padding: 12px 14px;
+  }
+
+  #ticker {
+    font-size: 18px;
+  }
+
+  .value {
+    font-size: 22px;
+  }
+
+  #banner .panel {
+    padding: 12px;
+  }
+
+  .banner-title {
+    font-size: 12px;
+  }
+
+  .banner-value {
+    font-size: 16px;
+  }
+
+  .banner-month {
+    display: none;
+  }
+}
+</style>
+</head>
+
+<body
+  data-style="text"
+  data-theme="mono"
+  data-stage="0"
+  data-state="loading"
+  data-hide-empty="0"
+>
+
+<div id="root">
+
+  <div id="status">Loading Plus Goal Data</div>
+
+  <section id="text" class="block">
+    <div class="textbox" id="textline">
+      Plus Goal: <span class="text-accent">0 / 100 (0%)</span>
+    </div>
+  </section>
+
+  <section id="compact" class="block">
+    <div class="panel">
+      <div class="topline">
+        <div class="title gradient">Plus Goal</div>
+        <div class="level" id="compact-level">LEVEL 1</div>
+        <div class="value" id="compact-value">0 / 100</div>
+      </div>
+
+      <div class="track">
+        <div class="fill" id="compact-fill"></div>
+      </div>
+
+      <div class="subline">
+        <span id="compact-percent">0%</span>
+        <span id="compact-remaining">0 Points To Go</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="full" class="block">
+    <div class="panel">
+      <div class="topline">
+        <div>
+          <div class="title gradient">Plus Goal</div>
+          <div class="muted" id="full-month">October</div>
+        </div>
+
+        <div class="level" id="full-level">LEVEL 1</div>
+        <div class="value" id="full-value">0 / 100</div>
+      </div>
+
+      <div class="track">
+        <div class="fill" id="full-fill"></div>
+        <div class="barlabel" id="full-barlabel">0%</div>
+      </div>
+
+      <div class="subline">
+        <span id="full-remaining">0 Points To Go</span>
+        <span id="full-user">@powergpu</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="ticker" class="block">
+    PLUS LV
+    <span class="accent" id="ticker-level">1</span>,
+    <span id="ticker-value">0 / 100</span>,
+    <span id="ticker-percent">0%</span>
+  </section>
+
+  <section id="hero" class="block">
+    <div class="panel">
+      <div class="hero-label gradient" id="hero-label">
+        PLUS GOAL, LEVEL 1, OCTOBER
+      </div>
+
+      <div class="hero-number">
+        <span id="hero-current">0</span>
+        <span class="denom muted" id="hero-target">/ 100</span>
+      </div>
+
+      <div class="hero-meta">
+        <span class="gradient" id="hero-percent">0%</span>
+        <span class="muted"> | </span>
+        <span id="hero-remaining">0 Points To Go</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="ring" class="block">
+    <div class="panel">
+      <div class="ring-label gradient" id="ring-label">
+        PLUS GOAL, LEVEL 1
+      </div>
+
+      <div class="ring-wrap">
+        <svg viewBox="0 0 140 140" aria-hidden="true">
+          <defs>
+            <linearGradient
+              id="ringGradient"
+              x1="0"
+              y1="0"
+              x2="1"
+              y2="1"
+            >
+              <stop id="ring-stop1" offset="0%" stop-color="#f0f0f5"/>
+              <stop id="ring-stop2" offset="100%" stop-color="#9a9aa5"/>
+            </linearGradient>
+          </defs>
+
+          <circle
+            class="ring-track"
+            cx="70"
+            cy="70"
+            r="59"
+          ></circle>
+
+          <circle
+            class="ring-fill"
+            id="ring-fill"
+            cx="70"
+            cy="70"
+            r="59"
+            stroke-dasharray="370.708"
+            stroke-dashoffset="370.708"
+          ></circle>
+        </svg>
+
+        <div class="ring-center gradient" id="ring-percent">0%</div>
+      </div>
+
+      <div class="ring-value" id="ring-value">0 / 100</div>
+    </div>
+  </section>
+
+  <section id="banner" class="block">
+    <div class="panel">
+      <div class="banner-row">
+        <div class="banner-left">
+          <div class="level" id="banner-level">LEVEL 1</div>
+          <div class="banner-month muted" id="banner-month">October</div>
+        </div>
+
+        <div class="banner-title gradient">PLUS GOAL</div>
+
+        <div class="banner-value" id="banner-value">0 / 100</div>
+      </div>
+
+      <div class="banner-track">
+        <div class="fill" id="banner-fill"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="pill" class="block">
+    <div class="pillbox">
+      <span class="pill-level" id="pill-level">LV 1</span>
+      <span id="pill-value">0 / 100</span>
+      <span class="gradient" id="pill-percent">0%</span>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function() {
+  "use strict";
+
+  const params = new URLSearchParams(location.search);
+
+  const pathChannel = window.__PLUS_CHANNEL || "";
+
+  const channel = (
+    pathChannel ||
+    params.get("channel") ||
+    params.get("c") ||
+    "powergpu"
+  ).toLowerCase();
+
+  const serverParam = params.get("server");
+
+  const apiBase = (
+    serverParam ||
+    (location.protocol === "file:"
+      ? "http://localhost:8408"
+      : location.origin)
+  ).replace(/\/+$/, "");
+
+  const styles = [
+    "text",
+    "compact",
+    "full",
+    "ticker",
+    "hero",
+    "ring",
+    "banner",
+    "pill"
+  ];
+
+  const themes = [
+    "mono",
+    "grape",
+    "mint",
+    "gold",
+    "ocean",
+    "sunset",
+    "rose",
+    "neon"
+  ];
+
+  const requestedStyle = (params.get("style") || "text").toLowerCase();
+  const requestedTheme = (params.get("theme") || "mono").toLowerCase();
+
+  const style = styles.includes(requestedStyle)
+    ? requestedStyle
+    : "text";
+
+  const theme = themes.includes(requestedTheme)
+    ? requestedTheme
+    : "mono";
+
+  const width = Math.max(
+    220,
+    Math.min(900, Number(params.get("w")) || 640)
+  );
+
+  const refresh = Math.max(
+    10,
+    Math.min(300, Number(params.get("refresh")) || 30)
+  ) * 1000;
+
+  document.body.dataset.style = style;
+  document.body.dataset.theme = theme;
+  document.body.dataset.stage = params.get("stage") === "1" ? "1" : "0";
+  document.body.dataset.hideEmpty = params.get("hide") === "1" ? "1" : "0";
+
+  document.body.style.setProperty("--w", width + "px");
+
+  const themeValues = {
+    mono: ["#f0f0f5", "#9a9aa5"],
+    grape: ["#7b46ff", "#ff5ec4"],
+    mint: ["#45e6cf", "#5ecbff"],
+    gold: ["#ffd166", "#ff9e2c"],
+    ocean: ["#38bdf8", "#2563eb"],
+    sunset: ["#ff7e5f", "#feb47b"],
+    rose: ["#fb7185", "#e879f9"],
+    neon: ["#39ff14", "#00e5ff"]
+  };
+
+  const selectedTheme = themeValues[theme];
+
+  document.getElementById("ring-stop1")
+    .setAttribute("stop-color", selectedTheme[0]);
+
+  document.getElementById("ring-stop2")
+    .setAttribute("stop-color", selectedTheme[1]);
+
+  const $ = id => document.getElementById(id);
+
+  function set(id, value) {
+    $(id).textContent = String(value);
+  }
+
+  function points(n) {
+    return n + " " + (n === 1 ? "Point" : "Points") + " To Go";
+  }
+
+  function fill(id, percent) {
+    $(id).style.width =
+      Math.max(0, Math.min(100, percent)) + "%";
+  }
+
+  function empty(message) {
+    document.body.dataset.state = "empty";
+    set("status", message || ("No Plus Goal data for @" + channel));
+  }
+
+  function render(d) {
+    if (
+      !d ||
+      d.current === null ||
+      d.current === undefined ||
+      d.target === null ||
+      d.target === undefined
+    ) {
+      empty();
+      return;
+    }
+
+    document.body.dataset.state = "ready";
+
+    const current = Number(d.current);
+    const target = Number(d.target);
+    const percent = Number(d.percent);
+    const remaining = Number(d.remaining);
+    const level = Number(d.goal_level);
+
+    const levelText = "LEVEL " + level;
+    const value = current + " / " + target;
+    const pct = percent + "%";
+
+    // TEXT
+    $("textline").innerHTML =
+      'Plus Goal: <span class="text-accent">' +
+      value + " (" + pct + ")</span>";
+
+    // COMPACT
+    set("compact-level", levelText);
+    set("compact-value", value);
+    set("compact-percent", pct);
+    set("compact-remaining", points(remaining));
+    fill("compact-fill", percent);
+
+    // FULL
+    set("full-level", levelText);
+    set("full-value", value);
+    set("full-month", d.month_label || "");
+    set("full-remaining", points(remaining));
+    set("full-user", "@" + (d.username || channel));
+    set("full-barlabel", pct);
+    fill("full-fill", percent);
+
+    // TICKER
+    set("ticker-level", level);
+    set("ticker-value", value);
+    set("ticker-percent", pct);
+
+    // HERO
+    set(
+      "hero-label",
+      "PLUS GOAL, LEVEL " + level + ", " +
+      (d.month_label || "").toUpperCase()
+    );
+
+    set("hero-current", current);
+    set("hero-target", "/ " + target);
+    set("hero-percent", pct);
+    set("hero-remaining", points(remaining));
+
+    // RING
+    set("ring-label", "PLUS GOAL, LEVEL " + level);
+    set("ring-percent", pct);
+    set("ring-value", value);
+
+    const circumference = 2 * Math.PI * 59;
+
+    $("ring-fill").setAttribute(
+      "stroke-dasharray",
+      circumference.toFixed(3)
+    );
+
+    $("ring-fill").setAttribute(
+      "stroke-dashoffset",
+      (
+        circumference *
+        (1 - Math.max(0, Math.min(100, percent)) / 100)
+      ).toFixed(3)
+    );
+
+    // BANNER
+    set("banner-level", levelText);
+    set("banner-month", d.month_label || "");
+    set("banner-value", value);
+    fill("banner-fill", percent);
+
+    // PILL
+    set("pill-level", "LV " + level);
+    set("pill-value", value);
+    set("pill-percent", pct);
+  }
+
+  async function update() {
+    try {
+      if (!/^[a-z0-9_]{3,25}$/.test(channel)) {
+        empty("Invalid Twitch channel");
+        return;
+      }
+
+      const response = await fetch(
+        apiBase + "/plusgoal=" + encodeURIComponent(channel),
+        {
+          cache: "no-store"
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("API returned HTTP " + response.status);
+      }
+
+      const data = await response.json();
+
+      if (
+        data.found === false ||
+        data.current === null ||
+        data.current === undefined
+      ) {
+        empty("No Plus Goal data for @" + channel);
+        return;
+      }
+
+      render(data);
+
+    } catch (error) {
+      empty("Unable to load Plus Goal data");
+      console.error("[Plus Goal Overlay]", error);
+    }
+  }
+
+  update();
+  setInterval(loadData, 10000);
+
+})();
+</script>
+
+</body>
+</html>
