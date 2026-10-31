@@ -3,6 +3,7 @@
 ## Requirements
 - Node.js 18 or newer
 - Internet access to Twitch public GraphQL
+<img width="2560" height="1271" alt="TwitchPartnerPlus-Screenshot1" src="https://github.com/user-attachments/assets/8f760dee-8d9d-4aed-a32a-e47737423874" />
 
 No npm dependencies are required.
 
