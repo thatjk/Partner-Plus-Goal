@@ -1,12 +1,8 @@
 {
-  "name": "twitch-plusgoal-overlays",
+  "name": "twitch-plus-goal-overlay",
   "version": "1.0.0",
-  "description": "Dependency-free Twitch Plus Goal JSON API and OBS overlays",
+  "description": "Lightweight Twitch Partner Plus goal API and OBS overlays",
   "main": "server.js",
-  "scripts": {
-    "start": "node server.js"
-  },
-  "engines": {
-    "node": ">=18"
-  }
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" }
 }
